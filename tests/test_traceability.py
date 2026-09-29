@@ -24,12 +24,14 @@ def _manifest(result):
 
 # --- Empreinte SHA-256 -----------------------------------------------------
 
+@pytest.mark.exigence("EXG-07")
 def test_sha256_matches_hashlib(tmp_path):
     f = tmp_path / "x.bin"
     f.write_bytes(b"abc")
     assert sha256_file(f) == hashlib.sha256(b"abc").hexdigest()
 
 
+@pytest.mark.exigence("EXG-07")
 def test_sha256_changes_when_one_byte_changes(tmp_path):
     f = tmp_path / "x.bin"
     f.write_bytes(b"abc")
@@ -40,6 +42,7 @@ def test_sha256_changes_when_one_byte_changes(tmp_path):
 
 # --- Journal et manifeste --------------------------------------------------
 
+@pytest.mark.exigence("EXG-08", "EXG-09")
 def test_valid_run_writes_log_and_manifest(files, tmp_path):
     valid_path, _ = files
     result = check(valid_path, tmp_path / "out", now=NOW)
@@ -50,6 +53,7 @@ def test_valid_run_writes_log_and_manifest(files, tmp_path):
     assert "SHA-256" in text and "VALIDE" in text
 
 
+@pytest.mark.exigence("EXG-07", "EXG-08")
 def test_manifest_content_for_failed_run(files, tmp_path):
     _, invalid_path = files
     result = check(invalid_path, tmp_path / "out", now=NOW)
@@ -64,6 +68,7 @@ def test_manifest_content_for_failed_run(files, tmp_path):
     assert m["anomalies"][0]["cellule"] == "C2"
 
 
+@pytest.mark.exigence("EXG-04", "EXG-08")
 def test_same_input_gives_identical_manifest(files, tmp_path):
     valid_path, _ = files
     m1 = _manifest(check(valid_path, tmp_path / "a", now=NOW))
@@ -71,6 +76,7 @@ def test_same_input_gives_identical_manifest(files, tmp_path):
     assert m1 == m2
 
 
+@pytest.mark.exigence("EXG-10")
 def test_unusable_file_is_still_traced(tmp_path):
     fake = tmp_path / "faux.xlsx"
     fake.write_text("pas un classeur")
@@ -83,6 +89,7 @@ def test_unusable_file_is_still_traced(tmp_path):
     assert m["dictionnaire_sha256"] is None
 
 
+@pytest.mark.exigence("EXG-10")
 def test_missing_file_is_traced_without_hash(tmp_path):
     result = check(tmp_path / "absent.xlsx", tmp_path / "out", now=NOW)
     m = _manifest(result)

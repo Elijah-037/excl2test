@@ -27,6 +27,7 @@ def _issues(path):
 
 # --- Cas nominal -----------------------------------------------------------
 
+@pytest.mark.exigence("EXG-03", "EXG-06")
 def test_valid_file_has_no_issue(files):
     valid_path, _ = files
     assert _issues(valid_path) == []
@@ -49,17 +50,20 @@ EXPECTED_DEFECTS = [
 ]
 
 
+@pytest.mark.exigence("EXG-02", "EXG-03", "EXG-04", "EXG-05")
 def test_invalid_file_gives_exactly_the_expected_issues(files):
     _, invalid_path = files
     found = [(i.cell, i.code) for i in _issues(invalid_path)]
     assert found == EXPECTED_DEFECTS
 
 
+@pytest.mark.exigence("EXG-04")
 def test_issues_are_reproducible(files):
     _, invalid_path = files
     assert _issues(invalid_path) == _issues(invalid_path)
 
 
+@pytest.mark.exigence("EXG-05")
 def test_duplicate_message_points_to_first_occurrence(files):
     _, invalid_path = files
     duplicate = [i for i in _issues(invalid_path) if i.code == "ID_DUPLICATE"][0]
@@ -84,6 +88,7 @@ def _make_workbook(tmp_path, cases_rows, header=None):
     return path
 
 
+@pytest.mark.exigence("EXG-02")
 def test_number_typed_as_text_is_reported_not_converted(tmp_path):
     path = _make_workbook(
         tmp_path, [("TC-001", "REQ-DCDC-001", "Vin", "48", "V", "Vout", 12.0, "V", 2)]
@@ -91,6 +96,7 @@ def test_number_typed_as_text_is_reported_not_converted(tmp_path):
     assert [(i.cell, i.code) for i in _issues(path)] == [("D2", "VALUE_NOT_NUMERIC")]
 
 
+@pytest.mark.exigence("EXG-03")
 def test_boundary_values_are_accepted(tmp_path):
     path = _make_workbook(
         tmp_path,
@@ -102,6 +108,7 @@ def test_boundary_values_are_accepted(tmp_path):
     assert _issues(path) == []
 
 
+@pytest.mark.exigence("EXG-03")
 def test_just_outside_boundary_is_rejected(tmp_path):
     path = _make_workbook(
         tmp_path, [("TC-001", "REQ-DCDC-001", "Vin", 60.01, "V", "Vout", 12.0, "V", 2)]
@@ -109,6 +116,7 @@ def test_just_outside_boundary_is_rejected(tmp_path):
     assert [i.code for i in _issues(path)] == ["OUT_OF_RANGE"]
 
 
+@pytest.mark.exigence("EXG-01")
 def test_blank_rows_are_ignored(tmp_path):
     path = _make_workbook(
         tmp_path,
@@ -121,6 +129,7 @@ def test_blank_rows_are_ignored(tmp_path):
     assert len(cases) == 1
 
 
+@pytest.mark.exigence("EXG-01")
 def test_wrong_header_raises_template_error(tmp_path):
     bad_header = list(schema.CASES_COLUMNS)
     bad_header[3] = "Valeur"
@@ -129,11 +138,13 @@ def test_wrong_header_raises_template_error(tmp_path):
         load(path)
 
 
+@pytest.mark.exigence("EXG-01")
 def test_missing_file_raises_template_error(tmp_path):
     with pytest.raises(TemplateError, match="introuvable"):
         load(tmp_path / "absent.xlsx")
 
 
+@pytest.mark.exigence("EXG-01")
 def test_not_an_excel_file_raises_template_error(tmp_path):
     fake = tmp_path / "faux.xlsx"
     fake.write_text("ceci n'est pas un classeur")
@@ -143,6 +154,7 @@ def test_not_an_excel_file_raises_template_error(tmp_path):
 
 # --- Ligne de commande : codes de retour -----------------------------------
 
+@pytest.mark.exigence("EXG-11")
 def test_cli_exit_codes(files, tmp_path, capsys):
     valid_path, invalid_path = files
     out_dir = str(tmp_path / "sorties")
