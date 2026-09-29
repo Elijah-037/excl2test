@@ -145,8 +145,9 @@ def test_not_an_excel_file_raises_template_error(tmp_path):
 
 def test_cli_exit_codes(files, tmp_path, capsys):
     valid_path, invalid_path = files
-    assert main([str(valid_path)]) == 0
-    assert main([str(invalid_path)]) == 1
-    assert main([str(tmp_path / "absent.xlsx")]) == 2
+    out_dir = str(tmp_path / "sorties")
+    assert main([str(valid_path), "--sortie", out_dir]) == 0
+    assert main([str(invalid_path), "--sortie", out_dir]) == 1
+    assert main([str(tmp_path / "absent.xlsx"), "--sortie", out_dir]) == 2
     out = capsys.readouterr().out
-    assert "VALIDE" in out and "ÉCHEC" in out and "inexploitable" in out
+    assert "VALIDE" in out and "ECHEC" in out and "INEXPLOITABLE" in out

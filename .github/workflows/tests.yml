@@ -1,0 +1,43 @@
+name: Tests
+
+# Se déclenche à chaque push sur main et à chaque pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer le projet et pytest
+        run: pip install -e ".[dev]"
+
+      - name: Lancer les tests
+        run: pytest
+
+      # Preuve archivée : exécution de l'outil sur les fichiers d'exemple.
+      # "|| true" : le fichier invalide échoue volontairement (code 1).
+      - name: Générer log et manifeste sur les exemples
+        if: always()
+        shell: bash
+        run: |
+          python -m excl2test.sample_data
+          python -m excl2test data/cas_valides.xlsx --sortie sorties
+          python -m excl2test data/cas_invalides.xlsx --sortie sorties || true
+
+      - name: Archiver les traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-${{ matrix.os }}
+          path: sorties/
